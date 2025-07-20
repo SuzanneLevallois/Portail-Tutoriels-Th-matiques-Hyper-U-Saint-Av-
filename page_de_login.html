@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion / Inscription - Trading Premium</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url('https://res.cloudinary.com/dzmyybvbu/image/upload/v1741207281/naw6jwove44lhvicmjfs.jpg') center no-repeat;
+      background-size: cover; /* Ensures the background image covers the entire body */
+      display: flex;
+      color: #000000;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0; /* Remove default body margin */
+    }
+    .container {
+      background: #ffffff75;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      width: 100%; /* Make container responsive */
+      max-width: 400px; /* Set a maximum width for the container */
+      text-align: center;
+      box-sizing: border-box; /* Include padding in the width calculation */
+    }
+    input, button, select {
+      width: calc(100% - 20px); /* Adjust width to account for padding */
+      padding: 10px;
+      margin: 10px auto; /* Use auto for left/right margin to center block elements */
+      border: none;
+      border-radius: 5px;
+      display: block; /* Make inputs block elements to allow margin: auto for centering */
+      box-sizing: border-box; /* Include padding in the width calculation */
+    }
+    input, select {
+      background: #000000; /* Original color */
+      color: #fff; /* Changed text color to white for better contrast with black background */
+      /* Placeholder color for better visibility on dark input fields */
+      opacity: 0.7; /* Make placeholder slightly transparent */
+    }
+    input::placeholder {
+      color: #ccc; /* Lighter color for placeholders */
+    }
+    button {
+      background-color: #3b3b3b;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #808080;
+    }
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #3b3b3b;
+      width: calc(100% - 20px); /* Apply the same width logic as other inputs/buttons */
+      margin: 10px auto; /* Center the button */
+    }
+    .google-btn img {
+      width: 20px;
+      margin-right: 10px;
+    }
+    .toggle-link, #reset-password-link {
+      color: #000000;
+      cursor: pointer;
+      text-decoration: underline;
+      display: block;
+      margin-top: 10px;
+    }
+    .error-message {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+    }
+    .success-message {
+      color: green;
+      text-align: center;
+      margin-top: 10px;
+    }
+    /* Popup Réinitialisation de mot de passe */
+    .reset-password-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #5d5d5d;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      z-index: 1000;
+      width: 100%; /* Make popup responsive */
+      max-width: 350px; /* Max width for popup */
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+    /* Specific styles for placeholder text color - these were targeting the input elements directly */
+    /* Instead of .signup-country, #signup-country, use the input::placeholder pseudo-element for consistent placeholder styling */
+    /* The email-bouton class was defined but not used for placeholder color - the input::placeholder will handle it */
+    /* Removed the following, as input::placeholder will override or replace their intended effect for placeholder color */
+    /*
+    .signup-country, #signup-country {
+        color: #626262;
+    }
+    .email, #reset-email {
+        color: #808080;
+    }
+    */
+    .close-btn {
+      float: right;
+      cursor: pointer;
+      color: red;
+    }
+    /* Timer visuel */
+    #popup-timer {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 14px;
+      color: red;
+    }
+    /* Désactiver le bouton lors du timer */
+    button[disabled] {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="login-form">
+      <h1>Se connecter</h1>
+      <button id="google-login" class="google-btn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
+        Se connecter avec Google
+      </button>
+      <input type="email" id="login-email" placeholder="Adresse e-mail">
+      <input type="password" id="login-password" placeholder="Mot de passe">
+      <button id="email-login">Se connecter</button>
+      <span id="reset-password-link" class="toggle-link" style="display: none;">Mot de passe oublié ? Réinitialiser</span>
+      <div class="toggle-link" id="show-signup">Pas de compte ? Créer un compte</div>
+      <div class="error-message" id="login-error"></div>
+    </div>
+    <div id="signup-form" style="display:none;">
+      <h1>Créer un compte</h1>
+      <input type="text" id="signup-firstname" placeholder="Prénom">
+      <input type="text" id="signup-lastname" placeholder="Nom">
+      <input type="email" id="signup-email" placeholder="Adresse e-mail">
+      <input type="tel" id="signup-phone" placeholder="Numéro de téléphone">
+      <select id="signup-country">
+        <option value="" disabled selected>Pays</option>
+        <option value="FR">France</option>
+        <option value="US">États-Unis</option>
+        <option value="DE">Allemagne</option>
+        <option value="GB">Royaume-Uni</option>
+        <option value="CA">Canada</option>
+        <option value="AU">Australie</option>
+        <option value="JP">Japon</option>
+        <option value="CN">Chine</option>
+        <option value="IN">Inde</option>
+        <option value="BR">Brésil</option>
+      </select>
+      <input type="password" id="signup-password" placeholder="Mot de passe">
+      <input type="password" id="signup-confirm-password" placeholder="Confirmer le mot de passe">
+      <button id="email-signup">S'inscrire</button>
+      <div class="toggle-link" id="show-login">Déjà inscrit ? Se connecter</div>
+      <div class="error-message" id="signup-error"></div>
+      <div class="success-message" id="signup-success"></div>
+    </div>
+    <div class="overlay" id="reset-overlay"></div>
+    <div class="reset-password-popup" id="reset-password-popup">
+      <span class="close-btn" id="close-reset-popup">&times;</span>
+      <h2>Réinitialiser le mot de passe</h2>
+      <input type="email" id="reset-email" placeholder="Entrez votre adresse email">
+      <button id="send-reset-email">Envoyer</button>
+      <span id="popup-timer"></span>
+      <div class="error-message" id="reset-error"></div>
+      <div class="success-message" id="reset-success"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, sendPasswordResetEmail, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    const redirectAfterLogin = () => {
+      window.location.href = "Dashboard_lavage_de_mains.html";
+    };
+
+    // Sauvegarder les données utilisateur dans Firestore
+    async function saveUserData(user, firstName = '', lastName = '', phone = '', country = '') {
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        isPremium: false,
+        isAdmin: false,
+        isPDG: false,
+        subscriptionStatus: 'inactive',
+        bannedUntil: null,
+        passwordLastChanged: new Date().toISOString(), // Ajout du champ pour suivre le dernier changement de mot de passe
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+      };
+
+      if (firstName) userData.firstName = firstName;
+      if (lastName) userData.lastName = lastName;
+      if (phone) userData.phone = phone;
+      if (country) userData.country = country;
+
+      await setDoc(doc(db, "users", user.uid), userData, { merge: true });
+    }
+
+    // Initialiser une session utilisateur dans Firestore
+    async function initializeUserSession(userId) {
+      const sessionData = {
+        chartData: { indicators: ['RSI', 'Bollinger Bands'], zoomLevel: 1.0, layout: 'dark' },
+        screenshotData: {},
+        newsData: [],
+        chatHistory: [],
+        tradeHistory: [],
+        generalPreferences: { theme: 'dark', backgroundImage: "default.jpg", language: 'fr' },
+      };
+      await setDoc(doc(db, "sessions", userId), sessionData, { merge: true });
+    }
+
+    // Vérifier si le mot de passe a été changé après la dernière connexion
+    async function isPasswordChangedAfterLastLogin(user) {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        // Ensure metadata.lastSignInTime exists for comparison
+        if (user.metadata && user.metadata.lastSignInTime) {
+          const passwordLastChanged = new Date(userData.passwordLastChanged).getTime();
+          const lastLoginTime = new Date(user.metadata.lastSignInTime).getTime();
+          return passwordLastChanged > lastLoginTime; // Retourne true si le mot de passe a été changé après la dernière connexion
+        }
+      }
+      return false;
+    }
+
+    // Redirection sécurisée vers le dashboard
+    async function redirectToDashboard(user) {
+      if (!user.emailVerified) {
+        displayError('login-error', "Veuillez vérifier votre email avant de vous connecter.");
+        return;
+      }
+
+      // Fetch user data to check for ban status (assuming bannedUntil is stored in user doc)
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const bannedUntil = userData.bannedUntil;
+        if (bannedUntil && new Date(bannedUntil).getTime() > Date.now()) {
+          displayError('login-error', "Vous êtes banni jusqu'à " + new Date(bannedUntil).toLocaleString());
+          return;
+        }
+      }
+
+      if (await isPasswordChangedAfterLastLogin(user)) {
+        displayError('login-error', "Votre mot de passe a été changé. Veuillez vous reconnecter avec le nouveau mot de passe.");
+        await signOut(auth); // Déconnecter l'utilisateur
+        return;
+      }
+
+      window.location.href = "https://stirred-chow-becoming.ngrok-free.app/Dashboard.html"; // Redirection vers le dashboard
+    }
+
+    // Connexion avec Google
+    document.getElementById("google-login").addEventListener("click", async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        if (!user.emailVerified) {
+          await sendEmailVerification(user);
+          alert("Un email de vérification a été envoyé. Veuillez le valider avant de continuer.");
+          await signOut(auth); // Sign out if email not verified to prevent partial login
+          return;
+        }
+
+        await saveUserData(user);
+        await initializeUserSession(user.uid);
+        await redirectToDashboard(user);
+      } catch (error) {
+        console.error(error);
+        displayError('login-error', "Erreur lors de la connexion avec Google: " + error.message);
+      }
+    });
+
+    // Connexion avec Email/Mot de Passe
+    document.getElementById("email-login").addEventListener("click", async () => {
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        if (!user.emailVerified) {
+          displayError('login-error', "Veuillez vérifier votre email avant de vous connecter.");
+          await signOut(auth); // Sign out if email not verified to prevent partial login
+          return;
+        }
+
+        await redirectToDashboard(user);
+      } catch (error) {
+        handleFailedLoginAttempt(email); // Gérer les tentatives échouées
+        displayError('login-error', error.message);
+      }
+    });
+
+    // Inscription avec Email
+    document.getElementById("email-signup").addEventListener("click", async () => {
+      const firstName = document.getElementById("signup-firstname").value;
+      const lastName = document.getElementById("signup-lastname").value;
+      const email = document.getElementById("signup-email").value;
+      const phone = document.getElementById("signup-phone").value;
+      const country = document.getElementById("signup-country").value;
+      const password = document.getElementById("signup-password").value;
+      const confirmPassword = document.getElementById("signup-confirm-password").value;
+
+      if (!country) {
+        displayError('signup-error', "Veuillez sélectionner un pays.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        displayError('signup-error', "Les mots de passe ne correspondent pas !");
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await sendEmailVerification(user);
+        await saveUserData(user, firstName, lastName, phone, country);
+        displaySuccess('signup-success', "Un lien de vérification a été envoyé à votre adresse email. Veuillez le valider pour activer votre compte.");
+      } catch (error) {
+        displayError('signup-error', error.message);
+      }
+    });
+
+    // Écouteur d'état d'authentification
+    onAuthStateChanged(auth, async (user) => {
+      if (user && user.emailVerified) {
+        // Only redirect if a full login process has just completed or user is actively authenticated
+        // This prevents immediate redirection on page load if user is already logged in but hasn't gone through a fresh login flow.
+        // For a more robust solution, you might check if they are on the login/signup page.
+        // Example: if (window.location.pathname.includes('index.html')) { redirectToDashboard(user); }
+      }
+    });
+
+    // Gérer les tentatives de connexion échouées
+    function handleFailedLoginAttempt(email) {
+      let failedAttempts = parseInt(localStorage.getItem(`failedAttempts_${email}`)) || 0;
+      failedAttempts++;
+      localStorage.setItem(`failedAttempts_${email}`, failedAttempts);
+
+      if (failedAttempts >= 1) {
+        document.getElementById("reset-password-link").style.display = "block"; // Afficher le lien après 1 échec
+      }
+    }
+
+    // Fonctions génériques
+    function displayError(elementId, message) {
+      const errorElement = document.getElementById(elementId);
+      if (errorElement) {
+        errorElement.innerText = message;
+        errorElement.style.display = 'block'; // Ensure error message is visible
+      }
+    }
+
+    function displaySuccess(elementId, message) {
+      const successElement = document.getElementById(elementId);
+      if (successElement) {
+        successElement.innerText = message;
+        successElement.style.display = 'block'; // Ensure success message is visible
+      }
+    }
+
+    // Toggle entre connexion et inscription
+    document.getElementById("show-signup").addEventListener("click", () => {
+      document.getElementById("login-form").style.display = "none";
+      document.getElementById("signup-form").style.display = "block";
+      displayError('login-error', ''); // Clear previous login errors
+      displaySuccess('login-success', ''); // Clear previous login success messages
+    });
+
+    document.getElementById("show-login").addEventListener("click", () => {
+      document.getElementById("signup-form").style.display = "none";
+      document.getElementById("login-form").style.display = "block";
+      displayError('signup-error', ''); // Clear previous signup errors
+      displaySuccess('signup-success', ''); // Clear previous signup success messages
+    });
+
+    // Ouvrir la popup de réinitialisation
+    document.getElementById("reset-password-link").addEventListener("click", () => {
+      document.getElementById("reset-overlay").style.display = "block";
+      document.getElementById("reset-password-popup").style.display = "block";
+      displayError('reset-error', ''); // Clear previous reset errors
+      displaySuccess('reset-success', ''); // Clear previous reset success messages
+    });
+
+    // Fermer la popup de réinitialisation
+    document.getElementById("close-reset-popup").addEventListener("click", () => {
+      document.getElementById("reset-overlay").style.display = "none";
+      document.getElementById("reset-password-popup").style.display = "none";
+    });
+
+    // Envoyer le lien de réinitialisation
+    document.getElementById("send-reset-email").addEventListener("click", async () => {
+      const email = document.getElementById("reset-email").value;
+
+      if (!email) {
+        displayError('reset-error', "Veuillez entrer une adresse email valide.");
+        return;
+      }
+
+      if (resetTimer) {
+        alert("Vous devez attendre avant de demander un nouveau lien de réinitialisation.");
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        displaySuccess('reset-success', "Un lien de réinitialisation a été envoyé à votre adresse email.");
+        startResetTimer(); // Lancer le timer après l'envoi réussi
+      } catch (error) {
+        displayError('reset-error', error.message);
+      }
+    });
+
+    // Timer anti-spam pour la réinitialisation du mot de passe
+    let resetTimer = null;
+
+    function startResetTimer(secondsRemaining = 2 * 60 + 42) { // Timer de 2 minutes et 42 secondes
+      const endTime = Math.floor(Date.now() / 1000) + secondsRemaining;
+      localStorage.setItem('resetTimerEnd', endTime.toString());
+
+      const timerElement = document.getElementById("popup-timer");
+      const sendButton = document.getElementById("send-reset-email");
+
+      updateTimerDisplay(secondsRemaining);
+      sendButton.disabled = true;
+
+      resetTimer = setInterval(() => {
+        const currentTime = Math.floor(Date.now() / 1000);
+        const remainingSeconds = endTime - currentTime;
+
+        if (remainingSeconds <= 0) {
+          clearInterval(resetTimer);
+          resetTimer = null;
+          localStorage.removeItem('resetTimerEnd');
+          timerElement.textContent = "";
+          sendButton.disabled = false;
+        } else {
+          updateTimerDisplay(remainingSeconds);
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      document.getElementById("popup-timer").textContent = ` (Nouveau lien disponible dans ${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds})`;
+    }
+
+    function checkExistingTimer() {
+      const storedEndTime = localStorage.getItem('resetTimerEnd');
+      if (storedEndTime) {
+        const endTime = parseInt(storedEndTime, 10);
+        const currentTime = Math.floor(Date.now() / 1000);
+
+        if (endTime > currentTime) {
+          const remainingSeconds = endTime - currentTime;
+          startResetTimer(remainingSeconds);
+        } else {
+          localStorage.removeItem('resetTimerEnd'); // Nettoyer le timer expiré
+        }
+      }
+    }
+
+    // Vérifier au chargement si un timer existe
+    checkExistingTimer();
+  </script>
+
+<script src="https://static.app/js/static.js" type="text/javascript"></script>
+</body>
+</html>
